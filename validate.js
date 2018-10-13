@@ -10,6 +10,22 @@
 (function(exports, module, define) {
   "use strict";
 
+  /**
+   * Returns IE version for fixing issue
+   * https://github.com/ansman/validate.js/issues/181
+   */
+  var ieVersion = function () {
+      var iev = 0;
+      var ieold = (/MSIE (\d+\.\d+);/.test(navigator.userAgent));
+      var trident = !!navigator.userAgent.match(/Trident\/7.0/);
+      var rv = navigator.userAgent.indexOf("rv:11.0");
+
+      if (ieold) iev = new Number(RegExp.$1);
+      if (navigator.appVersion.indexOf("MSIE 10") != -1) iev = 10;
+      if (trident && rv != -1) iev = 11;
+      return iev;
+  }
+
   // The main function that calls the validators specified by the constraints.
   // The options are the following:
   //   - format (string) - An option that controls how the returned value is formatted
@@ -566,7 +582,12 @@
             }
           }
         } else {
-          var _val = typeof input.options[input.selectedIndex] !== 'undefined' ? input.options[input.selectedIndex].value : /* istanbul ignore next */ '';
+          // fix for IE
+          var _val;
+          if (ieVersion() >= 9)
+            _val = typeof input.options[input.selectedIndex] !== 'unknown' ? input.options[input.selectedIndex].value : /* istanbul ignore next */ '';
+          else
+            _val = typeof input.options[input.selectedIndex] !== 'undefined' ? input.options[input.selectedIndex].value : /* istanbul ignore next */ '';
           value = v.sanitizeFormValue(_val, options);
         }
         values[input.name] = value;
